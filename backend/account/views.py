@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 User = get_user_model()
 from rest_framework.response import Response
+from rest_framework import serializers
 from rest_framework.views import APIView
 from rest_framework import permissions
 from .models import UserCheck
@@ -20,16 +21,16 @@ class SignupView(APIView):
 
         if password == password2:
             if User.objects.filter(email=email).exists():
-                return Response({'error': 'User already exists'})
+                raise serializers.ValidationError({'error': 'User already exists'})
             else:
                 if len(password) < 6:
-                    return Response({'error': 'Password must be greater than 6'})
+                    raise serializers.ValidationError({'error': 'Password must be greater than 6'})
                 else:
                     user = User.objects.create_user(email=email, name=name, password=password)
                     UserCheck.objects.create(user_type=user_type, user=user)
                     return Response({'success': 'user created successfully'})
         else:
-            return Response({'error': 'Passwords does not match'})
+            raise serializers.ValidationError({'error': 'Passwords does not match'})
 
 class UsercheckView(APIView):
     def post(self, request, format=None):
